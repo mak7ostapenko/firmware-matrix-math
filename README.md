@@ -1,10 +1,13 @@
 # Firmware 3d math library
 
-Matrix lib from [Px4](https://github.com/PX4/PX4-Autopilot/tree/main/src/lib/matrix) with minor custom changes. 
 
 The library provides a set of mathematical types and operations for 3D applications, including matrices, vectors, quaternions, and more. It is designed to be lightweight and efficient, suitable for use in embedded systems and robotics.
 
+
+Matrix lib mainly based on [Px4](https://github.com/PX4/PX4-Autopilot/tree/main/src/lib/matrix) with minor custom changes. 
 **NOTE:** License and copyrights are preserved from the original Px4 library.
+
+It was created using these [instructions](https://stackoverflow.com/questions/24577084/forking-a-sub-directory-of-a-repository-on-github-and-making-it-part-of-my-own-r)
 
 ## Installation
 
