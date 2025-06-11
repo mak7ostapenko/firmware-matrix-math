@@ -41,24 +41,24 @@ public:
 		_A = A;
 
 		for (size_t j = 0; j < N; j++) {
-			Type normx = Type(0);
+			Type normx = static_cast<Type>(0);
 
 			for (size_t i = j; i < M; i++) {
 				normx += _A(i, j) * _A(i, j);
 			}
 
 			normx = std::sqrt(normx);
-			Type s = _A(j, j) > 0 ? Type(-1) : Type(1);
+			Type s = _A(j, j) > 0 ? static_cast<Type>(-1) : static_cast<Type>(1);
 			Type u1 = _A(j, j) - s * normx;
 
 			// prevent divide by zero
 			// also covers u1. normx is never negative
-			if (normx < Type(1e-8)) {
+			if (normx < static_cast<Type>(1e-8)) {
 				break;
 			}
 
 			Type w[M] = {};
-			w[0] = Type(1);
+			w[0] = static_cast<Type>(1);
 
 			for (size_t i = j + 1; i < M; i++) {
 				w[i - j] = _A(i, j) / u1;
@@ -69,7 +69,7 @@ public:
 			_tau(j) = -s * u1 / normx;
 
 			for (size_t k = j + 1; k < N; k++) {
-				Type tmp = Type(0);
+				Type tmp = static_cast<Type>(0);
 
 				for (size_t i = j; i < M; i++) {
 					tmp += w[i - j] * _A(i, k);
@@ -97,14 +97,14 @@ public:
 
 		for (size_t j = 0; j < N; j++) {
 			Type w[M];
-			w[0] = Type(1);
+			w[0] = static_cast<Type>(1);
 
 			// fill vector w
 			for (size_t i = j + 1; i < M; i++) {
 				w[i - j] = _A(i, j);
 			}
 
-			Type tmp = Type(0);
+			Type tmp = static_cast<Type>(0);
 
 			for (size_t i = j; i < M; i++) {
 				tmp += w[i - j] * qtbv(i);
@@ -141,9 +141,9 @@ public:
 			}
 
 			// divide by zero, return vector of zeros
-			if (isEqualF(_A(i, i), Type(0), Type(1e-8))) {
+			if (isEqualF(_A(i, i), static_cast<Type>(0), static_cast<Type>(1e-8))) {
 				for (size_t z = 0; z < N; z++) {
-					x(z) = Type(0);
+					x(z) = static_cast<Type>(0);
 				}
 
 				break;

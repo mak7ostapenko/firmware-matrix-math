@@ -1,36 +1,74 @@
-############################################################################
-#
-#   Copyright (c) 2021 PX4 Development Team. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in
-#    the documentation and/or other materials provided with the
-#    distribution.
-# 3. Neither the name PX4 nor the names of its contributors may be
-#    used to endorse or promote products derived from this software
-#    without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
-# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
-# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-############################################################################
+cmake_minimum_required(VERSION 3.10.0)
+project(firmware-math-lib VERSION 0.1.0 LANGUAGES C CXX)
 
-if(BUILD_TESTING)
-	add_subdirectory(test)
-endif()
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion -Wsign-conversion")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused -Wold-style-cast")
+
+# Enable optimizations for embedded/firmware use
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -DDEBUG")
+
+# Main lib 
+add_library(firmware-math-lib firmware-math-lib.cpp)
+target_include_directories(firmware-math-lib PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    matrix/
+    
+)
+
+# Tests
+include(CTest)
+enable_testing()
+
+find_package(GTest REQUIRED)
+find_package(Threads REQUIRED)
+
+# test executables
+add_executable(firmware-math-tests
+    test/MatrixAssignmentTest.cpp
+    test/MatrixHatveeTest.cpp          
+    test/MatrixScalarMultiplicationTest.cpp  
+    test/MatrixUpperRightTriangleTest.cpp  
+    test/MatrixHelperTest.cpp          
+    test/MatrixSetIdentityTest.cpp           
+    test/MatrixVector2Test.cpp
+    test/MatrixAttitudeTest.cpp    
+    test/MatrixIntegralTest.cpp        
+    test/MatrixSliceTest.cpp                 
+    test/MatrixVector3Test.cpp
+    test/MatrixCopyToTest.cpp      
+    test/MatrixInverseTest.cpp         
+    test/MatrixSparseVectorTest.cpp          
+    test/MatrixVector4Test.cpp
+    test/MatrixDcm2Test.cpp        
+    test/MatrixLeastSquaresTest.cpp    
+    test/MatrixSquareTest.cpp                
+    test/MatrixVectorAssignmentTest.cpp
+    test/MatrixDualTest.cpp        
+    test/MatrixMultiplicationTest.cpp  
+    test/MatrixTransposeTest.cpp             
+    test/MatrixVectorTest.cpp
+    test/MatrixFilterTest.cpp      
+    test/MatrixPseudoInverseTest.cpp   
+    test/MatrixUnwrapTest.cpp                
+)
+
+target_link_libraries(firmware-math-tests
+    firmware-math-lib
+    GTest::gtest
+    GTest::gtest_main
+    Threads::Threads
+)
+
+target_include_directories(firmware-math-tests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    include/
+)
+
+include(GoogleTest)
+gtest_discover_tests(firmware-math-tests)

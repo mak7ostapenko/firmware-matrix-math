@@ -100,34 +100,34 @@ public:
 		Quaternion &q = *this;
 		Type t = R.trace();
 
-		if (t > Type(0)) {
-			t = std::sqrt(Type(1) + t);
-			q(0) = Type(0.5) * t;
-			t = Type(0.5) / t;
+		if (t > static_cast<Type>(0)) {
+			t = std::sqrt(static_cast<Type>(1) + t);
+			q(0) = static_cast<Type>(0.5) * t;
+			t = static_cast<Type>(0.5) / t;
 			q(1) = (R(2, 1) - R(1, 2)) * t;
 			q(2) = (R(0, 2) - R(2, 0)) * t;
 			q(3) = (R(1, 0) - R(0, 1)) * t;
 
 		} else if (R(0, 0) > R(1, 1) && R(0, 0) > R(2, 2)) {
-			t = std::sqrt(Type(1) + R(0, 0) - R(1, 1) - R(2, 2));
-			q(1) = Type(0.5) * t;
-			t = Type(0.5) / t;
+			t = std::sqrt(static_cast<Type>(1) + R(0, 0) - R(1, 1) - R(2, 2));
+			q(1) = static_cast<Type>(0.5) * t;
+			t = static_cast<Type>(0.5) / t;
 			q(0) = (R(2, 1) - R(1, 2)) * t;
 			q(2) = (R(1, 0) + R(0, 1)) * t;
 			q(3) = (R(0, 2) + R(2, 0)) * t;
 
 		} else if (R(1, 1) > R(2, 2)) {
-			t = std::sqrt(Type(1) - R(0, 0) + R(1, 1) - R(2, 2));
-			q(2) = Type(0.5) * t;
-			t = Type(0.5) / t;
+			t = std::sqrt(static_cast<Type>(1) - R(0, 0) + R(1, 1) - R(2, 2));
+			q(2) = static_cast<Type>(0.5) * t;
+			t = static_cast<Type>(0.5) / t;
 			q(0) = (R(0, 2) - R(2, 0)) * t;
 			q(1) = (R(1, 0) + R(0, 1)) * t;
 			q(3) = (R(2, 1) + R(1, 2)) * t;
 
 		} else {
-			t = std::sqrt(Type(1) - R(0, 0) - R(1, 1) + R(2, 2));
-			q(3) = Type(0.5) * t;
-			t = Type(0.5) / t;
+			t = std::sqrt(static_cast<Type>(1) - R(0, 0) - R(1, 1) + R(2, 2));
+			q(3) = static_cast<Type>(0.5) * t;
+			t = static_cast<Type>(0.5) / t;
 			q(0) = (R(1, 0) - R(0, 1)) * t;
 			q(1) = (R(0, 2) + R(2, 0)) * t;
 			q(2) = (R(2, 1) + R(1, 2)) * t;

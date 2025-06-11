@@ -11,11 +11,18 @@
 #include <cassert>
 #include <cstdio>
 #include <cmath>
+#include <type_traits>
+#include <concepts>
+
+#include "concepts.hpp"
 
 namespace matrix
 {
 
+// Forward declarations
+
 template<typename Type, size_t M, size_t N>
+requires ScalarLike<Type> && (M > 0) && (N > 0)
 class Matrix;
 
 template<typename Type, size_t M>
@@ -27,7 +34,8 @@ class SliceT
 public:
 	using Self = SliceT<MatrixT, Type, P, Q, M, N>;
 
-	SliceT(size_t x0, size_t y0, MatrixT *data) :
+	// SAFETY: Using reference instead of pointer for better memory safety
+	SliceT(size_t x0, size_t y0, MatrixT &data) :
 		_x0(x0),
 		_y0(y0),
 		_data(data)
@@ -45,7 +53,7 @@ public:
 		assert(i < P);
 		assert(j < Q);
 
-		return (*_data)(_x0 + i, _y0 + j);
+		return _data(_x0 + i, _y0 + j);
 	}
 
 	Type &operator()(size_t i, size_t j)
@@ -53,7 +61,7 @@ public:
 		assert(i < P);
 		assert(j < Q);
 
-		return (*_data)(_x0 + i, _y0 + j);
+		return _data(_x0 + i, _y0 + j);
 	}
 
 	// Separate function needed otherwise the default copy constructor matches before the deep copy implementation
@@ -257,7 +265,7 @@ public:
 
 	SliceT<MatrixT, Type, P, Q, M, N> &operator/=(const Type &scalar)
 	{
-		return operator*=(Type(1) / scalar);
+		return operator*=(static_cast<Type>(1) / scalar);
 	}
 
 	Matrix<Type, P, Q> operator*(const Type &scalar) const
@@ -376,7 +384,7 @@ public:
 
 private:
 	size_t _x0, _y0;
-	MatrixT *_data;
+	MatrixT &_data;  // SAFETY: Using reference instead of pointer for better memory safety
 };
 
 template <typename Type, size_t P, size_t Q, size_t M, size_t N>

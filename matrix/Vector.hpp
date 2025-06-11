@@ -129,7 +129,7 @@ public:
 		return (*this) / norm();
 	}
 
-	Vector unit_or_zero(const Type eps = Type(1e-5)) const
+	Vector unit_or_zero(const Type eps = static_cast<Type>(1e-5)) const
 	{
 		const Type n = norm();
 
@@ -180,7 +180,7 @@ OStream &operator<<(OStream &os, const matrix::Vector<Type, M> &vector)
 	// element: tab, point, 8 digits, 4 scientific notation chars; row: newline; string: \0 end
 	static const size_t n = 15 * M * 1 + 1 + 1;
 	char string[n];
-	vector.transpose().write_string(string, n);
+	vector.transpose().write_string(std::span<char>(string, n));  // SAFETY: Using std::span instead of raw pointer and size
 	os << string;
 	return os;
 }

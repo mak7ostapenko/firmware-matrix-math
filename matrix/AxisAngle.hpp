@@ -68,11 +68,11 @@ public:
 		AxisAngle &v = *this;
 		Type mag = q.imag().norm();
 
-		if (std::fabs(mag) >= Type(1e-10)) {
-			v = q.imag() * Type(Type(2) * std::atan2(mag, q(0)) / mag);
+		if (std::fabs(mag) >= static_cast<Type>(1e-10)) {
+			v = q.imag() * static_cast<Type>(static_cast<Type>(2) * std::atan2(mag, q(0)) / mag);
 
 		} else {
-			v = q.imag() * Type(Type(2) * Type(sign(q(0))));
+			v = q.imag() * static_cast<Type>(static_cast<Type>(2) * static_cast<Type>(sign(q(0))));
 		}
 	}
 

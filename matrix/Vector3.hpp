@@ -98,12 +98,12 @@ public:
 
 	ConstSlice<Type, 2, 1, 3, 1> xy() const
 	{
-		return {0, 0, this};
+		return {0, 0, *this};  // SAFETY: Passing reference instead of pointer
 	}
 
 	Slice<Type, 2, 1, 3, 1> xy()
 	{
-		return {0, 0, this};
+		return {0, 0, *this};  // SAFETY: Passing reference instead of pointer
 	}
 
 	Dcm<Type> hat() const      // inverse to Dcm.vee() operation

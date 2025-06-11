@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include <px4_platform_common/defines.h>
+#include <common.h>
 
 namespace matrix
 {
@@ -19,7 +19,7 @@ namespace matrix
  * @return true if the two values are considered equal, false otherwise
  */
 template<typename Type>
-bool isEqualF(const Type x, const Type y, const Type eps = Type(1e-4f))
+bool isEqualF(const Type x, const Type y, const Type eps = static_cast<Type>(1e-4f))
 {
 	return (std::fabs(x - y) <= eps)
 	       || (std::isnan(x) && std::isnan(y))
@@ -97,7 +97,7 @@ Integer wrap(Integer x, Integer low, Integer high)
 template<typename Type>
 Type wrap_pi(Type x)
 {
-	return wrap(x, Type(-M_PI_PRECISE), Type(M_PI_PRECISE));
+	return wrap(x, static_cast<Type>(-M_PI_PRECISE), static_cast<Type>(M_PI_PRECISE));
 }
 
 /**
@@ -106,7 +106,7 @@ Type wrap_pi(Type x)
 template<typename Type>
 Type wrap_2pi(Type x)
 {
-	return wrap(x, Type(0), Type((2 * M_PI_PRECISE)));
+	return wrap(x, static_cast<Type>(0), static_cast<Type>(2 * M_PI_PRECISE));
 }
 
 /**
@@ -134,7 +134,7 @@ Type unwrap(const Type last_x, const Type new_x, const Type low, const Type high
 template<typename Type>
 Type unwrap_pi(const Type last_angle, const Type new_angle)
 {
-	return unwrap(last_angle, new_angle, Type(-M_PI_PRECISE), Type(M_PI_PRECISE));
+	return unwrap(last_angle, new_angle, static_cast<Type>(-M_PI_PRECISE), static_cast<Type>(M_PI_PRECISE));
 }
 
 /**

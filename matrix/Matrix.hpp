@@ -8,10 +8,16 @@
 
 #pragma once
 
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
+#include <concepts>
+#include <type_traits>
+#include <span>
 
+#include "concepts.hpp"
 #include "helper_functions.hpp"
 #include "Slice.hpp"
 
@@ -19,16 +25,42 @@ namespace matrix
 {
 
 template<typename Type, size_t M, size_t N>
+requires ScalarLike<Type> && (M > 0) && (N > 0)
 class Matrix
 {
-	Type _data[M][N] {};
+	static_assert(M > 0 && N > 0, "Matrix dimensions must be positive");
+	
+	std::array<std::array<Type, N>, M> _data{};
 
 public:
+	// Type aliases for better readability and STL compatibility
+	using value_type = Type;
+	using size_type = size_t;
+	using reference = Type&;
+	using const_reference = const Type&;
+	using iterator = typename std::array<Type, N>::iterator;
+	using const_iterator = typename std::array<Type, N>::const_iterator;
+	
+	// Static constants
+	static constexpr size_type rows = M;
+	static constexpr size_type cols = N;
+	static constexpr size_type size = M * N;
 
 	// Constructors
-	Matrix() = default;
+	constexpr Matrix() noexcept = default;
 
-	explicit Matrix(const Type data_[M * N])
+	// Constructor from 1D array (safer with span)
+	explicit constexpr Matrix(std::span<const Type, M * N> data) noexcept
+	{
+		for (size_t i = 0; i < M; i++) {
+			for (size_t j = 0; j < N; j++) {
+				_data[i][j] = data[N * i + j];
+			}
+		}
+	}
+	
+	// Legacy constructor for backward compatibility
+	explicit constexpr Matrix(const Type data_[M * N]) noexcept
 	{
 		for (size_t i = 0; i < M; i++) {
 			for (size_t j = 0; j < N; j++) {
@@ -37,7 +69,8 @@ public:
 		}
 	}
 
-	explicit Matrix(const Type data_[M][N])
+	// Constructor from 2D array
+	explicit constexpr Matrix(const Type data_[M][N]) noexcept
 	{
 		for (size_t i = 0; i < M; i++) {
 			for (size_t j = 0; j < N; j++) {
@@ -46,7 +79,8 @@ public:
 		}
 	}
 
-	Matrix(const Matrix &other)
+	// Copy constructor
+	constexpr Matrix(const Matrix &other) noexcept
 	{
 		for (size_t i = 0; i < M; i++) {
 			for (size_t j = 0; j < N; j++) {
@@ -55,59 +89,78 @@ public:
 		}
 	}
 
+	// Template constructor for type conversion
 	template<typename S>
-	Matrix(const Matrix<S, M, N> &aa)
+	requires std::is_convertible_v<S, Type>
+	constexpr Matrix(const Matrix<S, M, N> &other) noexcept
 	{
 		for (size_t i = 0; i < M; i++) {
 			for (size_t j = 0; j < N; j++) {
-				_data[i][j] = static_cast<Type>(aa(i, j));
+				_data[i][j] = static_cast<Type>(other(i, j));
+			}
+		}
+	}
+
+	// Slice constructors with better safety
+	template<size_t P, size_t Q>
+	constexpr Matrix(const Slice<Type, M, N, P, Q> &in_slice) noexcept
+	{
+		for (size_t i = 0; i < M; i++) {
+			for (size_t j = 0; j < N; j++) {
+				_data[i][j] = in_slice(i, j);
 			}
 		}
 	}
 
 	template<size_t P, size_t Q>
-	Matrix(const Slice<Type, M, N, P, Q> &in_slice)
+	constexpr Matrix(const ConstSlice<Type, M, N, P, Q> &in_slice) noexcept
 	{
-		Matrix<Type, M, N> &self = *this;
-
 		for (size_t i = 0; i < M; i++) {
 			for (size_t j = 0; j < N; j++) {
-				self(i, j) = in_slice(i, j);
-			}
-		}
-	}
-
-	template<size_t P, size_t Q>
-	Matrix(const ConstSlice<Type, M, N, P, Q> &in_slice)
-	{
-		Matrix<Type, M, N> &self = *this;
-
-		for (size_t i = 0; i < M; i++) {
-			for (size_t j = 0; j < N; j++) {
-				self(i, j) = in_slice(i, j);
+				_data[i][j] = in_slice(i, j);
 			}
 		}
 	}
 
 	/**
-	 * Accessors/ Assignment etc.
+	 * Accessors with bounds checking and modern C++20 features
 	 */
 
-
-	inline const Type &operator()(size_t i, size_t j) const
+	[[nodiscard]] constexpr const_reference operator()(size_type i, size_type j) const noexcept
 	{
-		assert(i < M);
-		assert(j < N);
-
+		// Use std::array's at() in debug mode for bounds checking
+		if constexpr (__cpp_lib_is_constant_evaluated) {
+			if (std::is_constant_evaluated()) {
+				return _data.at(i).at(j); // bounds checking in constexpr context
+			}
+		}
+		
+		assert(i < M && j < N);
 		return _data[i][j];
 	}
 
-	inline Type &operator()(size_t i, size_t j)
+	constexpr reference operator()(size_type i, size_type j) noexcept
 	{
-		assert(i < M);
-		assert(j < N);
-
+		// Use std::array's at() in debug mode for bounds checking
+		if constexpr (__cpp_lib_is_constant_evaluated) {
+			if (std::is_constant_evaluated()) {
+				return _data.at(i).at(j); // bounds checking in constexpr context
+			}
+		}
+		
+		assert(i < M && j < N);
 		return _data[i][j];
+	}
+
+	// Safe accessors with bounds checking
+	[[nodiscard]] constexpr const_reference at(size_type i, size_type j) const
+	{
+		return _data.at(i).at(j); // Always bounds checked
+	}
+
+	constexpr reference at(size_type i, size_type j)
+	{
+		return _data.at(i).at(j); // Always bounds checked
 	}
 
 	Matrix<Type, M, N> &operator=(const Matrix<Type, M, N> &other)
@@ -348,7 +401,7 @@ public:
 	void operator/=(Type scalar)
 	{
 		Matrix<Type, M, N> &self = *this;
-		self *= (Type(1) / scalar);
+		self *= (static_cast<Type>(1) / scalar);
 	}
 
 	inline void operator+=(Type scalar)
@@ -383,21 +436,24 @@ public:
 	 * Misc. Functions
 	 */
 
-	void write_string(char *buf, size_t n) const
+	void write_string(std::span<char> buf) const  // SAFETY: Using std::span instead of raw pointer
 	{
+		if (buf.empty()) return;  // SAFETY: Check for empty span
+		
 		buf[0] = '\0'; // make an empty string to begin with (we need the '\0' for strlen to work)
 		const Matrix<Type, M, N> &self = *this;
+		const size_t n = buf.size();
 
 		for (size_t i = 0; i < M; i++) {
 			for (size_t j = 0; j < N; j++) {
-				snprintf(buf + strlen(buf), n - strlen(buf), "\t%8.8g", double(self(i, j))); // directly append to the string buffer
+				snprintf(buf.data() + strlen(buf.data()), n - strlen(buf.data()), "\t%8.8g", double(self(i, j))); // directly append to the string buffer
 			}
 
-			snprintf(buf + strlen(buf), n - strlen(buf), "\n");
+			snprintf(buf.data() + strlen(buf.data()), n - strlen(buf.data()), "\n");
 		}
 	}
 
-	void print(float eps = 1e-9) const
+	void print(float eps = 1e-9f) const
 	{
 		// print column numbering
 		if (N > 1) {
@@ -422,14 +478,14 @@ public:
 
 				// if symmetric don't print upper triangular elements
 				if (is_prev_symmetric && (M == N) && (j > i) && (i < N) && (j < M)
-				    && (fabs(d - static_cast<double>(self(j, i))) < (double)eps)
+				    && (fabs(d - static_cast<double>(self(j, i))) < static_cast<double>(eps))
 				   ) {
 					// print empty space
 					printf("         ");
 
 				} else {
 					// avoid -0.0 for display
-					if (fabs(d - 0.0) < (double)eps) {
+					if (fabs(d - 0.0) < static_cast<double>(eps)) {
 						// print fixed width zero
 						printf(" 0       ");
 
@@ -471,13 +527,13 @@ public:
 	template<size_t P, size_t Q>
 	ConstSlice<Type, P, Q, M, N> slice(size_t x0, size_t y0) const
 	{
-		return {x0, y0, this};
+		return {x0, y0, *this};  // SAFETY: Passing reference instead of pointer
 	}
 
 	template<size_t P, size_t Q>
 	Slice<Type, P, Q, M, N> slice(size_t x0, size_t y0)
 	{
-		return {x0, y0, this};
+		return {x0, y0, *this};  // SAFETY: Passing reference instead of pointer
 	}
 
 	ConstSlice<Type, 1, N, M, N> row(size_t i) const
@@ -522,7 +578,11 @@ public:
 
 	void setZero()
 	{
-		memset(_data, 0, sizeof(_data));
+		for (size_t i = 0; i < M; i++) {
+			for (size_t j = 0; j < N; j++) {
+				_data[i][j] = static_cast<Type>(0);
+			}
+		}
 	}
 
 	inline void zero()
@@ -610,7 +670,7 @@ public:
 
 		for (size_t i = 0; i < M; i++) {
 			for (size_t j = 0; j < N; j++) {
-				r(i, j) = Type(std::fabs((*this)(i, j)));
+				r(i, j) = static_cast<Type>(std::fabs((*this)(i, j)));
 			}
 		}
 
@@ -713,7 +773,7 @@ Matrix<Type, M, N> operator*(Type scalar, const Matrix<Type, M, N> &other)
 
 template<typename Type, size_t  M, size_t N>
 bool isEqual(const Matrix<Type, M, N> &x,
-	     const Matrix<Type, M, N> &y, const Type eps = Type(1e-4f))
+	     const Matrix<Type, M, N> &y, const Type eps = static_cast<Type>(1e-4f))
 {
 	for (size_t i = 0; i < M; i++) {
 		for (size_t j = 0; j < N; j++) {
@@ -893,7 +953,7 @@ OStream &operator<<(OStream &os, const matrix::Matrix<Type, M, N> &matrix)
 	// element: tab, point, 8 digits, 4 scientific notation chars; row: newline; string: \0 end
 	static const size_t n = 15 * N * M + M + 1;
 	char string[n];
-	matrix.write_string(string, n);
+	matrix.write_string(std::span<char>(string, n));  // SAFETY: Using std::span instead of raw pointer and size
 	os << string;
 	return os;
 }

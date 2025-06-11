@@ -55,13 +55,13 @@ public:
 	template<size_t P, size_t Q>
 	ConstSlice<Type, P, Q, M, M> slice(size_t x0, size_t y0) const
 	{
-		return {x0, y0, this};
+		return {x0, y0, *this};  // SAFETY: Passing reference instead of pointer
 	}
 
 	template<size_t P, size_t Q>
 	Slice<Type, P, Q, M, M> slice(size_t x0, size_t y0)
 	{
-		return {x0, y0, this};
+		return {x0, y0, *this};  // SAFETY: Passing reference instead of pointer
 	}
 
 	// inverse alias
@@ -172,8 +172,8 @@ public:
 
 		SquareMatrix<Type, M> &self = *this;
 		// zero rows and columns
-		self.slice<Width, M>(first, 0) = Type(0);
-		self.slice<M, Width>(0, first) = Type(0);
+		self.slice<Width, M>(first, 0) = static_cast<Type>(0);
+		self.slice<M, Width>(0, first) = static_cast<Type>(0);
 
 		// set diagonals
 		unsigned vec_idx = 0;
@@ -192,8 +192,8 @@ public:
 
 		SquareMatrix<Type, M> &self = *this;
 		// zero rows and columns
-		self.slice<Width, M>(first, 0) = Type(0);
-		self.slice<M, Width>(0, first) = Type(0);
+		self.slice<Width, M>(first, 0) = static_cast<Type>(0);
+		self.slice<M, Width>(0, first) = static_cast<Type>(0);
 
 		// set diagonals
 		for (size_t idx = first; idx < first + Width; idx++) {
@@ -213,7 +213,7 @@ public:
 		if (Width > 1) {
 			for (size_t row_idx = first + 1; row_idx < first + Width; row_idx++) {
 				for (size_t col_idx = first; col_idx < row_idx; col_idx++) {
-					Type tmp = (self(row_idx, col_idx) + self(col_idx, row_idx)) / Type(2);
+					Type tmp = (self(row_idx, col_idx) + self(col_idx, row_idx)) / static_cast<Type>(2);
 					self(row_idx, col_idx) = tmp;
 					self(col_idx, row_idx) = tmp;
 				}
@@ -233,13 +233,13 @@ public:
 
 		for (size_t row_idx = first; row_idx < first + Width; row_idx++) {
 			for (size_t col_idx = 0; col_idx < first; col_idx++) {
-				Type tmp = (self(row_idx, col_idx) + self(col_idx, row_idx)) / Type(2);
+				Type tmp = (self(row_idx, col_idx) + self(col_idx, row_idx)) / static_cast<Type>(2);
 				self(row_idx, col_idx) = tmp;
 				self(col_idx, row_idx) = tmp;
 			}
 
 			for (size_t col_idx = first + Width; col_idx < M; col_idx++) {
-				Type tmp = (self(row_idx, col_idx) + self(col_idx, row_idx)) / Type(2);
+				Type tmp = (self(row_idx, col_idx) + self(col_idx, row_idx)) / static_cast<Type>(2);
 				self(row_idx, col_idx) = tmp;
 				self(col_idx, row_idx) = tmp;
 			}
@@ -248,7 +248,7 @@ public:
 
 	// checks if block diagonal is symmetric
 	template <size_t Width>
-	bool isBlockSymmetric(size_t first, const Type eps = Type(1e-8f))
+	bool isBlockSymmetric(size_t first, const Type eps = static_cast<Type>(1e-8f))
 	{
 		static_assert(Width <= M, "Width bigger than matrix");
 		assert(first + Width <= M);
@@ -270,7 +270,7 @@ public:
 
 	// checks if rows and columns are symmetric
 	template <size_t Width>
-	bool isRowColSymmetric(size_t first, const Type eps = Type(1e-8f))
+	bool isRowColSymmetric(size_t first, const Type eps = static_cast<Type>(1e-8f))
 	{
 		static_assert(Width <= M, "Width bigger than matrix");
 		assert(first + Width <= M);
@@ -351,7 +351,7 @@ SquareMatrix<Type, M> expm(const Matrix<Type, M, M> &A, size_t order = 5)
 
 	for (size_t i = 1; i <= order; i++) {
 		i_factorial *= i;
-		res += A_pow / Type(i_factorial);
+		res += A_pow / static_cast<Type>(i_factorial);
 		A_pow *= A_pow;
 	}
 
@@ -364,11 +364,11 @@ SquareMatrix<Type, M> expm(const Matrix<Type, M, M> &A, size_t order = 5)
 template<typename Type>
 bool inv(const SquareMatrix<Type, 1> &A, SquareMatrix<Type, 1> &inv, size_t rank = 1)
 {
-	if (std::fabs(A(0, 0)) < Type(FLT_EPSILON)) {
+	if (std::fabs(A(0, 0)) < static_cast<Type>(FLT_EPSILON)) {
 		return false;
 	}
 
-	inv(0, 0) = Type(1) / A(0, 0);
+	inv(0, 0) = static_cast<Type>(1) / A(0, 0);
 	return true;
 }
 
@@ -390,12 +390,12 @@ bool inv(const SquareMatrix<Type, M> &A, SquareMatrix<Type, M> &inv, size_t rank
 	for (size_t n = 0; n < rank; n++) {
 
 		// if diagonal is zero, swap with row below
-		if (std::fabs(U(n, n)) < Type(FLT_EPSILON)) {
+		if (std::fabs(U(n, n)) < static_cast<Type>(FLT_EPSILON)) {
 			//printf("trying pivot for row %d\n",n);
 			for (size_t i = n + 1; i < rank; i++) {
 
 				//printf("\ttrying row %d\n",i);
-				if (std::fabs(U(i, n)) > Type(FLT_EPSILON)) {
+				if (std::fabs(U(i, n)) > static_cast<Type>(FLT_EPSILON)) {
 					//printf("swapped %d\n",i);
 					U.swapRows(i, n);
 					P.swapRows(i, n);
