@@ -244,3 +244,7 @@ float yaw = e2.psi();
 ---
 
 For more, see the source of each type in the [matrix directory](https://github.com/mak7ostapenko/firmware-3d-math-library/tree/main/matrix).
+
+
+## License
+This library is licensed under the BSD 3-Clause License as original Px4 library. See the [LICENSE](LICENSE) file for details.
